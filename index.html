@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SprintFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<style>
+:root{
+  --primary:#4F46E5;--primary-light:#EEF2FF;--primary-dark:#3730A3;
+  --secondary:#6366F1;--accent:#22C55E;--accent-light:#DCFCE7;
+  --bg:#F3F4F8;--card:#FFFFFF;--text:#1F2937;--text-2:#6B7280;--text-3:#9CA3AF;
+  --border:#E5E7EB;--border-2:#D1D5DB;
+  --sidebar-w:224px;
+  --high:#EF4444;--high-bg:#FEF2F2;
+  --med:#F59E0B;--med-bg:#FFFBEB;
+  --low:#22C55E;--low-bg:#DCFCE7;
+  --todo-c:#6B7280;--todo-bg:#F3F4F6;
+  --prog-c:#4F46E5;--prog-bg:#EEF2FF;
+  --review-c:#F59E0B;--review-bg:#FFFBEB;
+  --done-c:#22C55E;--done-bg:#DCFCE7;
+  --back-c:#EF4444;--back-bg:#FEF2F2;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
+  --r:8px;--r-lg:12px;--r-xl:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+code,kbd{font-family:'DM Mono',monospace}
+/* Layout */
+.app{display:flex;height:100vh;overflow:hidden}
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600}
+.logo-text{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-0.3px}
+.logo-badge{font-size:10px;background:var(--primary-light);color:var(--primary);border-radius:4px;padding:1px 5px;font-weight:500}
+.sidebar-section{padding:12px 10px 4px;font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);margin:1px 6px;cursor:pointer;font-size:13px;color:var(--text-2);transition:all .15s;position:relative}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:500}
+.nav-item .nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--primary);color:#fff;border-radius:10px;padding:1px 6px;font-weight:600}
+.sidebar-projects{flex:1;overflow-y:auto;padding-bottom:8px}
+.proj-item{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:1px 6px;border-radius:var(--r);cursor:pointer;font-size:12px;color:var(--text-2);transition:all .15s}
+.proj-item:hover{background:var(--bg);color:var(--text)}
+.proj-item.active{background:var(--primary-light);color:var(--primary);font-weight:500}
+.proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sidebar-bottom{padding:10px;border-top:1px solid var(--border)}
+.user-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r);cursor:pointer}
+.user-row:hover{background:var(--bg)}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;font-size:11px}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+/* Topbar */
+.topbar{height:56px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600;flex:1;letter-spacing:-0.2px}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:0 12px;height:34px;width:220px;cursor:text;transition:all .15s}
+.search-box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.search-box input{border:none;background:none;outline:none;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);width:100%}
+.search-box input::placeholder{color:var(--text-3)}
+.search-icon{color:var(--text-3);font-size:13px;flex-shrink:0}
+.topbar-btn{height:34px;padding:0 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;transition:all .15s;white-space:nowrap}
+.topbar-btn:hover{background:var(--bg);border-color:var(--border-2)}
+.topbar-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.topbar-btn.primary:hover{background:var(--primary-dark)}
+.notif-btn{width:34px;height:34px;border-radius:var(--r);border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:all .15s}
+.notif-btn:hover{background:var(--bg)}
+.notif-dot{width:7px;height:7px;background:#EF4444;border-radius:50%;position:absolute;top:7px;right:7px;border:1.5px solid var(--card)}
+/* Tab bar */
+.tabbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;flex-shrink:0}
+.tab-btn{padding:10px 16px;font-size:13px;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px;font-weight:500;transition:all .15s;white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+/* Content */
+.content{flex:1;overflow:hidden;display:flex}
+/* Dashboard */
+.dashboard{flex:1;overflow-y:auto;padding:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:600;color:var(--text);letter-spacing:-0.5px}
+.stat-sub{font-size:12px;color:var(--text-2);margin-top:4px}
+.stat-accent{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;padding:2px 7px;border-radius:10px;margin-top:6px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow)}
+.dash-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.dash-card-title a{font-size:12px;color:var(--primary);font-weight:400;cursor:pointer}
+.sprint-bar-wrap{margin-bottom:10px}
+.sprint-bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:5px}
+.sprint-bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.sprint-bar-fill{height:100%;border-radius:4px;background:var(--primary);transition:width .4s}
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.activity-text{font-size:12px;color:var(--text-2);line-height:1.5}
+.activity-text strong{color:var(--text);font-weight:500}
+.activity-time{font-size:11px;color:var(--text-3);margin-top:2px}
+/* Backlog */
+.backlog-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.backlog-toolbar{padding:12px 20px;display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--card)}
+.filter-select{height:30px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text-2);background:var(--card);cursor:pointer;outline:none}
+.filter-select:focus{border-color:var(--primary)}
+.backlog-table-wrap{flex:1;overflow-y:auto;padding:0}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--bg);padding:8px 14px;font-size:11px;font-weight:600;color:var(--text-3);text-align:left;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+tbody tr:hover{background:#FAFAFA}
+tbody td{padding:10px 14px;font-size:13px;vertical-align:middle}
+.wi-id{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-3);font-weight:500}
+.wi-title-cell{color:var(--text);font-weight:400;max-width:260px}
+.wi-title-cell .title-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:500;white-space:nowrap}
+.pill-type-task{background:#EEF2FF;color:#4F46E5}
+.pill-type-bug{background:#FEF2F2;color:#DC2626}
+.pill-type-story{background:#ECFDF5;color:#059669}
+.pill-type-epic{background:#F5F3FF;color:#7C3AED}
+.pill-type-improvement{background:#FFF7ED;color:#EA580C}
+.pill-status-todo{background:var(--todo-bg);color:var(--todo-c)}
+.pill-status-progress{background:var(--prog-bg);color:var(--prog-c)}
+.pill-status-review{background:var(--review-bg);color:var(--review-c)}
+.pill-status-done{background:var(--done-bg);color:var(--done-c)}
+.pill-status-backlog{background:var(--back-bg);color:var(--back-c)}
+.pill-prio-high{background:var(--high-bg);color:var(--high)}
+.pill-prio-med{background:var(--med-bg);color:var(--med)}
+.pill-prio-low{background:var(--low-bg);color:var(--low)}
+.due-warn{color:#EF4444;font-weight:500}
+/* Kanban */
+.kanban-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.kanban-toolbar{padding:10px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0}
+.kanban-board{flex:1;overflow-x:auto;overflow-y:hidden;padding:16px 20px;display:flex;gap:12px}
+.k-col{width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.k-col-header{display:flex;align-items:center;gap:7px;padding:0 2px 8px;border-bottom:2px solid var(--border)}
+.k-col-name{font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em}
+.k-col-cnt{min-width:18px;height:18px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text-3)}
+.k-drop{flex:1;display:flex;flex-direction:column;gap:8px;min-height:80px;padding:2px 0;border-radius:var(--r);transition:background .15s}
+.k-drop.drag-over{background:var(--primary-light)}
+.k-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:11px 13px;cursor:pointer;box-shadow:var(--shadow);transition:all .15s;user-select:none}
+.k-card:hover{box-shadow:var(--shadow-md);border-color:var(--border-2);transform:translateY(-1px)}
+.k-card.dragging{opacity:.4;transform:rotate(2deg)}
+.k-card.ghost{border:1.5px dashed var(--primary);background:var(--primary-light);opacity:.6}
+.k-card-id{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);margin-bottom:5px}
+.k-card-title{font-size:13px;color:var(--text);font-weight:400;line-height:1.4;margin-bottom:8px}
+.k-card-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.k-add{display:flex;align-items:center;gap:5px;padding:6px 4px;font-size:12px;color:var(--text-3);cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;border-radius:var(--r);transition:all .15s}
+.k-add:hover{background:var(--bg);color:var(--text-2)}
+/* Detail panel */
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;display:flex;justify-content:flex-end}
+.detail-panel{width:520px;max-width:95vw;background:var(--card);height:100%;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+.dp-topbar{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dp-topbar-id{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-3);font-weight:500}
+.dp-close{width:28px;height:28px;border:1px solid var(--border);border-radius:var(--r);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-2);margin-left:auto;transition:all .15s}
+.dp-close:hover{background:var(--bg);color:var(--text)}
+.dp-body{flex:1;overflow-y:auto;padding:18px}
+.dp-title-input{width:100%;border:none;font-size:18px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:transparent;letter-spacing:-0.3px;margin-bottom:14px;padding:0}
+.dp-title-input:focus{outline:none}
+.dp-desc-input{width:100%;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:var(--bg);padding:10px 12px;resize:vertical;min-height:80px;line-height:1.6;margin-bottom:16px}
+.dp-desc-input:focus{border-color:var(--primary);background:var(--card);box-shadow:0 0 0 3px rgba(79,70,229,.08)}
+.dp-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.dp-field{display:flex;flex-direction:column;gap:5px}
+.dp-field-label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+.dp-select,.dp-date{width:100%;height:32px;border:1px solid var(--border);border-radius:var(--r);padding:0 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--card);outline:none;cursor:pointer}
+.dp-select:focus,.dp-date:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.08)}
+.dp-section-title{font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.dp-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+/* Comments */
+.comment-input-wrap{display:flex;gap:8px;margin-bottom:14px;align-items:flex-start}
+.comment-input{flex:1;border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:var(--bg);resize:none;line-height:1.5;min-height:60px}
+.comment-input:focus{border-color:var(--primary);background:var(--card)}
+.comment-item{display:flex;gap:9px;margin-bottom:12px}
+.comment-body{flex:1}
+.comment-author{font-size:12px;font-weight:500;color:var(--text)}
+.comment-time{font-size:11px;color:var(--text-3);margin-left:6px}
+.comment-text{font-size:13px;color:var(--text-2);line-height:1.5;margin-top:2px}
+/* Audit trail */
+.audit-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.audit-item:last-child{border:none}
+.audit-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0}
+.audit-text{font-size:12px;color:var(--text-2);line-height:1.5}
+.audit-text strong{color:var(--text);font-weight:500}
+.audit-change{display:inline-flex;align-items:center;gap:4px;font-size:11px}
+.audit-old{background:#FEF2F2;color:#DC2626;padding:1px 5px;border-radius:4px;text-decoration:line-through}
+.audit-new{background:#ECFDF5;color:#059669;padding:1px 5px;border-radius:4px}
+.audit-time{font-size:10px;color:var(--text-3);margin-top:2px}
+/* Save bar */
+.dp-save-bar{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.btn{height:32px;padding:0 14px;border-radius:var(--r);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:500;transition:all .15s;border:1px solid var(--border)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-ghost{background:var(--card);color:var(--text-2)}
+.btn-ghost:hover{background:var(--bg);color:var(--text)}
+.btn-danger{background:#FEF2F2;color:#DC2626;border-color:#FECACA}
+.btn-danger:hover{background:#FEE2E2}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--card);border-radius:var(--r-xl);padding:22px;width:380px;box-shadow:var(--shadow-lg);animation:popIn .18s ease}
+@keyframes popIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-bottom:16px}
+.field-group{margin-bottom:12px}
+.field-group label{display:block;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.field-group input,.field-group select{width:100%;height:34px;border:1px solid var(--border);border-radius:var(--r);padding:0 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--card);outline:none}
+.field-group input:focus,.field-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.08)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+/* Search results */
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);margin-top:4px;box-shadow:var(--shadow-lg);z-index:50;overflow:hidden;max-height:300px;overflow-y:auto}
+.search-result-item{padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .1s}
+.search-result-item:hover{background:var(--bg)}
+.search-result-item:not(:last-child){border-bottom:1px solid var(--border)}
+/* Empty */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-3);padding:60px}
+.empty-icon{font-size:36px;margin-bottom:4px}
+.empty-title{font-size:16px;font-weight:600;color:var(--text-2)}
+.empty-sub{font-size:13px;text-align:center;max-width:280px;line-height:1.5}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px}
+/* Tooltip */
+[title]{position:relative}
+/* Responsive search container */
+.search-container{position:relative}
+/* Progress ring */
+.prog-ring{transform:rotate(-90deg)}
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:#1F2937;color:#fff;padding:10px 16px;border-radius:var(--r-lg);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);z-index:999;animation:toastIn .2s ease;display:flex;align-items:center;gap:8px}
+@keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sprint-progress-bar{background:var(--bg);border-radius:4px;overflow:hidden;height:6px;width:100%;margin-top:4px}
+.sprint-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary),var(--secondary))}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">SF</div>
+      <span class="logo-text">SprintFlo</span>
+      <span class="logo-badge">Beta</span>
+    </div>
+    <div style="padding:6px 10px;margin-top:4px">
+      <div class="nav-item active" onclick="setView('dashboard')">
+        <span class="nav-icon">⬛</span>Dashboard
+      </div>
+      <div class="nav-item" onclick="setView('backlog')">
+        <span class="nav-icon">☰</span>Backlog
+        <span class="nav-badge" id="backlog-badge">0</span>
+      </div>
+      <div class="nav-item" onclick="setView('kanban')">
+        <span class="nav-icon">⬜</span>Kanban Board
+      </div>
+    </div>
+    <div class="sidebar-section">Projects</div>
+    <div class="sidebar-projects" id="sidebar-projects"></div>
+    <div class="sidebar-bottom">
+      <div class="user-row">
+        <div class="avatar" style="width:28px;height:28px;background:#EEF2FF;color:#4F46E5;font-size:11px">AK</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:500">Alex Kim</div>
+          <div style="font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">alex@sprintflow.io</div>
+        </div>
+        <span style="font-size:13px;color:var(--text-3)">⚙</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <div class="search-container">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="global-search" placeholder="Search work items..." oninput="handleSearch(this.value)" onblur="setTimeout(()=>hideSearch(),150)"/>
+        </div>
+        <div class="search-results" id="search-results" style="display:none"></div>
+      </div>
+      <button class="notif-btn"><span style="font-size:14px">🔔</span><span class="notif-dot"></span></button>
+      <button class="topbar-btn primary" onclick="openAddModal()">+ New Item</button>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tabbar" id="tabbar" style="display:none">
+      <div class="tab-btn active" data-tab="list" onclick="switchSubTab('list',this)">☰ List</div>
+      <div class="tab-btn" data-tab="board" onclick="switchSubTab('board',this)">⬜ Board</div>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="content-area"></div>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-overlay" id="detail-overlay" style="display:none" onclick="handleOverlayClick(event)">
+  <div class="detail-panel" id="detail-panel"></div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="modal-overlay" style="display:none">
+  <div class="modal" id="add-modal">
+    <h3>New Work Item</h3>
+    <div class="field-group">
+      <label>Title</label>
+      <input type="text" id="m-title" placeholder="What needs to be done?"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field-group">
+        <label>Type</label>
+        <select id="m-type">
+          <option value="task">Task</option>
+          <option value="bug">Bug</option>
+          <option value="story">Story</option>
+          <option value="epic">Epic</option>
+          <option value="improvement">Improvement</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Project</label>
+        <select id="m-proj"></select>
+      </div>
+      <div class="field-group">
+        <label>Priority</label>
+        <select id="m-prio">
+          <option value="high">High</option>
+          <option value="med" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Status</label>
+        <select id="m-status">
+          <option value="todo">To Do</option>
+          <option value="progress">In Progress</option>
+          <option value="review">Review</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Assignee</label>
+        <select id="m-assignee"></select>
+      </div>
+      <div class="field-group">
+        <label>Due Date</label>
+        <input type="date" id="m-due" style="height:34px;border:1px solid var(--border);border-radius:var(--r);padding:0 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;outline:none"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewItem()">Create Item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const MEMBERS = [
+  {id:1,name:'Alex Kim',   initials:'AK',color:'#4F46E5',bg:'#EEF2FF'},
+  {id:2,name:'Sam Patel',  initials:'SP',color:'#059669',bg:'#ECFDF5'},
+  {id:3,name:'Jordan Lee', initials:'JL',color:'#D97706',bg:'#FFFBEB'},
+  {id:4,name:'Morgan Wu',  initials:'MW',color:'#DC2626',bg:'#FEF2F2'},
+];
+const TYPE_LABELS = {task:'Task',bug:'Bug',story:'Story',epic:'Epic',improvement:'Improvement'};
+const STATUS_LABELS = {todo:'To Do',progress:'In Progress',review:'Review',done:'Done',backlog:'Backlog'};
+const STATUS_ORDER = ['backlog','todo','progress','review','done'];
+const PRIO_LABELS = {high:'High',med:'Medium',low:'Low'};
+
+let projects = [];
+let activeProj = 1;
+
+let workItems = [];
+
+let auditLogs = {
+  'WI0001':[
+    {by:'Alex Kim',field:'status',old:'todo',new:'progress',at:'2026-03-10 09:22'},
+    {by:'Alex Kim',field:'assignee',old:'Sam Patel',new:'Alex Kim',at:'2026-03-08 14:11'},
+  ],
+  'WI0002':[
+    {by:'Sam Patel',field:'status',old:'progress',new:'done',at:'2026-03-09 17:45'},
+    {by:'Sam Patel',field:'status',old:'todo',new:'progress',at:'2026-03-05 10:00'},
+  ],
+  'WI0004':[
+    {by:'Jordan Lee',field:'priority',old:'med',new:'high',at:'2026-03-11 08:30'},
+  ],
+};
+let comments = {
+  'WI0001':[
+    {by:'Sam Patel', initials:'SP', bg:'#ECFDF5', color:'#059669', text:'Scope confirmed with product team. Moving forward with Google OAuth first.', at:'Mar 8, 2:10 PM'},
+    {by:'Alex Kim',  initials:'AK', bg:'#EEF2FF', color:'#4F46E5', text:'Will also add Apple Sign-In in phase 2.', at:'Mar 9, 9:00 AM'},
+  ],
+};
+
+let nextId = 11;
+let currentView = 'dashboard';
+let selectedItemId = null;
+let activeSubTab = 'list';
+let modal = null;
+
+function genId(){ return 'WI' + String(nextId++).padStart(4,'0'); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function isOverdue(d,s){ return d && d < today() && s !== 'done'; }
+function fmtDate(d){ if(!d) return '—'; const [y,m,dy]=d.split('-'); const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]; return `${mo} ${+dy}`; }
+function member(id){ return MEMBERS.find(m=>m.id===id); }
+function projItems(){ return workItems.filter(w=>w.projId===activeProj); }
+
+// ─── RENDER ENGINE ───────────────────────────────────────────────────────────
+function setView(v){
+  currentView = v;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navMap = {dashboard:0,backlog:1,kanban:2};
+  document.querySelectorAll('.nav-item')[navMap[v]]?.classList.add('active');
+  document.getElementById('topbar-title').textContent = v==='dashboard'?'Dashboard':v==='backlog'?'Backlog':'Kanban Board';
+  document.getElementById('tabbar').style.display = (v==='backlog'||v==='kanban') ? 'flex' : 'none';
+  updateBadge();
+  if(v==='dashboard') renderDashboard();
+  else if(v==='backlog') renderBacklogView();
+  else if(v==='kanban') renderKanbanView();
+}
+
+function updateBadge(){
+  const n = workItems.filter(w=>w.projId===activeProj&&(w.status==='backlog'||isOverdue(w.due,w.status))).length;
+  document.getElementById('backlog-badge').textContent = n;
+}
+
+function renderSidebarProjects(){
+  const el = document.getElementById('sidebar-projects');
+  el.innerHTML='';
+  projects.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='proj-item'+(activeProj===p.id?' active':'');
+    d.innerHTML=`<span class="proj-dot" style="background:${p.color}"></span><span>${p.name}</span>`;
+    d.onclick=()=>{activeProj=p.id;renderSidebarProjects();setView(currentView);};
+    el.appendChild(d);
+  });
+  const add=document.createElement('div');
+  add.className='proj-item';
+  add.innerHTML=`<span style="font-size:16px;color:var(--text-3)">+</span><span style="color:var(--text-3)">New project</span>`;
+  add.onclick=openNewProjectModal;
+  el.appendChild(add);
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const items = projItems();
+  const done = items.filter(i=>i.status==='done').length;
+  const inprog = items.filter(i=>i.status==='progress').length;
+  const bugs = items.filter(i=>i.type==='bug'&&i.status!=='done').length;
+  const overdue = items.filter(i=>isOverdue(i.due,i.status)).length;
+  const proj = projects.find(p => p.id === activeProj) || projects[0];
+  if(!proj) return;
+
+  const c = document.getElementById('content-area');
+  c.innerHTML=`
+  <div class="dashboard">
+    <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <span class="proj-dot" style="width:10px;height:10px;background:${proj.color}"></span>
+      <span style="font-size:14px;font-weight:600;color:var(--text)">${proj.name}</span>
+      <span style="font-size:12px;color:var(--text-3)">· Active Sprint</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Items</div>
+        <div class="stat-val">${items.length}</div>
+        <div class="stat-accent" style="background:#EEF2FF;color:#4F46E5">${inprog} in progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed</div>
+        <div class="stat-val">${done}</div>
+        <div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${items.length?Math.round(done/items.length*100):0}%"></div></div>
+        <div class="stat-sub" style="margin-top:5px">${items.length?Math.round(done/items.length*100):0}% done</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Open Bugs</div>
+        <div class="stat-val" style="color:${bugs?'#DC2626':'var(--text)'}">${bugs}</div>
+        <div class="stat-accent" style="background:${bugs?'#FEF2F2':'#ECFDF5'};color:${bugs?'#DC2626':'#059669'}">${bugs?'Needs attention':'All clear'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Overdue</div>
+        <div class="stat-val" style="color:${overdue?'#F59E0B':'var(--text)'}">${overdue}</div>
+        <div class="stat-accent" style="background:${overdue?'#FFFBEB':'#ECFDF5'};color:${overdue?'#D97706':'#059669'}">${overdue?'Review needed':'On track'}</div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-card-title">Sprint Progress <a onclick="setView('backlog')">View all →</a></div>
+        ${STATUS_ORDER.map(s=>{
+          const n=items.filter(i=>i.status===s).length;
+          const pct=items.length?Math.round(n/items.length*100):0;
+          return `<div class="sprint-bar-wrap">
+            <div class="sprint-bar-label"><span>${STATUS_LABELS[s]}</span><span style="font-weight:500">${n}</span></div>
+            <div class="sprint-bar"><div class="sprint-bar-fill" style="width:${pct}%;background:${s==='done'?'#22C55E':s==='progress'?'#4F46E5':s==='review'?'#F59E0B':s==='backlog'?'#EF4444':'#9CA3AF'}"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">Recent Activity</div>
+        ${items.slice(-5).reverse().map(item=>`
+          <div class="activity-item">
+            <div class="activity-dot" style="background:${item.type==='bug'?'#EF4444':item.type==='epic'?'#7C3AED':'#4F46E5'}"></div>
+            <div>
+              <div class="activity-text"><strong>${item.id}</strong> · ${item.title}</div>
+              <div class="activity-text" style="margin-top:2px">Status: <span class="pill pill-status-${item.status}" style="font-size:11px">${STATUS_LABELS[item.status]}</span></div>
+              <div class="activity-time">${fmtDate(item.due)||'No due date'}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">Team Workload</div>
+        ${MEMBERS.map(m=>{
+          const n=items.filter(i=>i.assignee===m.id&&i.status!=='done').length;
+          return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div class="avatar" style="width:28px;height:28px;background:${m.bg};color:${m.color}">${m.initials}</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="font-weight:500">${m.name}</span><span style="color:var(--text-3)">${n} open</span>
+              </div>
+              <div class="sprint-bar"><div class="sprint-bar-fill" style="width:${Math.min(n*20,100)}%;background:${m.color}"></div></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-title">By Type</div>
+        ${Object.entries(TYPE_LABELS).map(([k,v])=>{
+          const n=items.filter(i=>i.type===k).length;
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span class="pill pill-type-${k}">${v}</span>
+            <div class="sprint-bar" style="flex:1"><div class="sprint-bar-fill" style="width:${items.length?Math.round(n/items.length*100):0}%"></div></div>
+            <span style="font-size:12px;color:var(--text-3);min-width:18px;text-align:right">${n}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── BACKLOG ─────────────────────────────────────────────────────────────────
+function renderBacklogView(){
+  const c = document.getElementById('content-area');
+  c.innerHTML=`
+  <div class="backlog-wrap">
+    <div class="backlog-toolbar">
+      <select class="filter-select" id="f-type" onchange="renderBacklogTable()">
+        <option value="">All Types</option>
+        ${Object.entries(TYPE_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="f-status" onchange="renderBacklogTable()">
+        <option value="">All Status</option>
+        ${STATUS_ORDER.map(s=>`<option value="${s}">${STATUS_LABELS[s]}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="f-prio" onchange="renderBacklogTable()">
+        <option value="">All Priority</option>
+        ${Object.entries(PRIO_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="f-assignee" onchange="renderBacklogTable()">
+        <option value="">All Assignees</option>
+        ${MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}
+      </select>
+      <div style="margin-left:auto;font-size:12px;color:var(--text-3)" id="item-count"></div>
+    </div>
+    <div class="backlog-table-wrap" id="backlog-table-wrap"></div>
+  </div>`;
+  renderBacklogTable();
+}
+
+function renderBacklogTable(){
+  let items = projItems();
+  const ft = document.getElementById('f-type')?.value;
+  const fs = document.getElementById('f-status')?.value;
+  const fp = document.getElementById('f-prio')?.value;
+  const fa = document.getElementById('f-assignee')?.value;
+  if(ft) items=items.filter(i=>i.type===ft);
+  if(fs) items=items.filter(i=>i.status===fs);
+  if(fp) items=items.filter(i=>i.prio===fp);
+  if(fa) items=items.filter(i=>i.assignee===+fa);
+  document.getElementById('item-count').textContent=`${items.length} item${items.length!==1?'s':''}`;
+
+  const w = document.getElementById('backlog-table-wrap');
+  if(!items.length){
+    w.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No work items</div><div class="empty-sub">Add a new item or adjust your filters.</div></div>`;
+    return;
+  }
+  w.innerHTML=`
+  <table>
+    <thead><tr>
+      <th style="width:90px">ID</th>
+      <th>Title</th>
+      <th style="width:100px">Type</th>
+      <th style="width:110px">Status</th>
+      <th style="width:80px">Priority</th>
+      <th style="width:110px">Assignee</th>
+      <th style="width:90px">Start</th>
+      <th style="width:90px">Due</th>
+    </tr></thead>
+    <tbody>
+      ${items.map(item=>{
+        const m=member(item.assignee);
+        const over=isOverdue(item.due,item.status);
+        return `<tr onclick="openDetail('${item.id}')">
+          <td><span class="wi-id">${item.id}</span></td>
+          <td><div class="wi-title-cell"><span class="title-text">${item.title}</span></div></td>
+          <td><span class="pill pill-type-${item.type}">${TYPE_LABELS[item.type]}</span></td>
+          <td><span class="pill pill-status-${item.status}">${STATUS_LABELS[item.status]}</span></td>
+          <td><span class="pill pill-prio-${item.prio}">${PRIO_LABELS[item.prio]}</span></td>
+          <td>${m?`<div style="display:flex;align-items:center;gap:6px"><div class="avatar" style="width:22px;height:22px;background:${m.bg};color:${m.color};font-size:9px">${m.initials}</div><span style="font-size:12px">${m.name.split(' ')[0]}</span></div>`:'<span style="color:var(--text-3);font-size:12px">—</span>'}</td>
+          <td style="font-size:12px;color:var(--text-2)">${fmtDate(item.start)}</td>
+          <td style="font-size:12px" class="${over?'due-warn':''}">${over?'⚠ ':''}${fmtDate(item.due)}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ─── KANBAN ──────────────────────────────────────────────────────────────────
+function renderKanbanView(){
+  const c = document.getElementById('content-area');
+  c.innerHTML=`
+  <div class="kanban-wrap">
+    <div class="kanban-toolbar">
+      <span style="font-size:12px;color:var(--text-2);font-weight:500">Filter:</span>
+      <select class="filter-select" id="k-type" onchange="renderKanbanBoard()">
+        <option value="">All Types</option>
+        ${Object.entries(TYPE_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="k-prio" onchange="renderKanbanBoard()">
+        <option value="">All Priority</option>
+        ${Object.entries(PRIO_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+      </select>
+    </div>
+    <div class="kanban-board" id="kanban-board"></div>
+  </div>`;
+  renderKanbanBoard();
+}
+
+function renderKanbanBoard(){
+  let items = projItems();
+  const kt = document.getElementById('k-type')?.value;
+  const kp = document.getElementById('k-prio')?.value;
+  if(kt) items=items.filter(i=>i.type===kt);
+  if(kp) items=items.filter(i=>i.prio===kp);
+
+  const board = document.getElementById('kanban-board');
+  board.innerHTML='';
+  const colColors = {backlog:'#EF4444',todo:'#9CA3AF',progress:'#4F46E5',review:'#F59E0B',done:'#22C55E'};
+
+  STATUS_ORDER.forEach(status=>{
+    const colItems=items.filter(i=>i.status===status);
+    const col=document.createElement('div'); col.className='k-col';
+    col.innerHTML=`<div class="k-col-header">
+      <span style="width:8px;height:8px;border-radius:50%;background:${colColors[status]};display:inline-block"></span>
+      <span class="k-col-name">${STATUS_LABELS[status]}</span>
+      <span class="k-col-cnt">${colItems.length}</span>
+    </div>`;
+    const drop=document.createElement('div'); drop.className='k-drop'; drop.dataset.status=status;
+    colItems.forEach(item=>{
+      const m=member(item.assignee);
+      const over=isOverdue(item.due,item.status);
+      const card=document.createElement('div'); card.className='k-card'; card.dataset.id=item.id;
+      card.innerHTML=`
+        <div class="k-card-id">${item.id}</div>
+        <div class="k-card-title">${item.title}</div>
+        <div class="k-card-footer">
+          <span class="pill pill-type-${item.type}" style="font-size:10px">${TYPE_LABELS[item.type]}</span>
+          <span class="pill pill-prio-${item.prio}" style="font-size:10px">${PRIO_LABELS[item.prio]}</span>
+          ${m?`<div class="avatar" style="width:20px;height:20px;background:${m.bg};color:${m.color};font-size:9px;margin-left:auto">${m.initials}</div>`:''}
+          ${over?`<span style="font-size:10px;color:#EF4444;font-weight:500">⚠ ${fmtDate(item.due)}</span>`:`<span style="font-size:10px;color:var(--text-3);margin-left:auto">${fmtDate(item.due)}</span>`}
+        </div>`;
+      card.onclick=()=>openDetail(item.id);
+      drop.appendChild(card);
+    });
+    if(drop._sortable) drop._sortable.destroy();
+    col.appendChild(drop);
+    const addBtn=document.createElement('button'); addBtn.className='k-add';
+    addBtn.innerHTML=`+ Add item`;
+    addBtn.onclick=()=>{ document.getElementById('m-status').value=status; openAddModal(); };
+    col.appendChild(addBtn);
+    board.appendChild(col);
+  });
+
+  STATUS_ORDER.forEach(status=>{
+    const zone=board.querySelector(`[data-status="${status}"]`);
+    if(!zone) return;
+    zone._sortable=Sortable.create(zone,{
+      group:'kanban',animation:150,ghostClass:'ghost',draggable:'.k-card',
+      onEnd(evt){
+        const id=evt.item.dataset.id;
+        const newStatus=evt.to.dataset.status;
+        const item=workItems.find(i=>i.id===id);
+        if(item && item.status!==newStatus){
+          addAudit(id,'status',STATUS_LABELS[item.status],STATUS_LABELS[newStatus]);
+          item.status=newStatus;
+          updateStatusInDB(id,newStatus);
+        }
+        renderKanbanBoard(); updateBadge();
+      }
+    });
+  });
+}
+
+// ─── DETAIL PANEL ────────────────────────────────────────────────────────────
+function openDetail(id){
+  selectedItemId=id;
+  const item=workItems.find(i=>i.id===id);
+  if(!item) return;
+  renderDetailPanel(item);
+  document.getElementById('detail-overlay').style.display='flex';
+}
+
+function renderDetailPanel(item){
+  const logs=(auditLogs[item.id]||[]).slice().reverse();
+  const cmts=(comments[item.id]||[]);
+  const panel=document.getElementById('detail-panel');
+  panel.innerHTML=`
+  <div class="dp-topbar">
+    <span class="pill pill-type-${item.type}">${TYPE_LABELS[item.type]}</span>
+    <span class="dp-topbar-id">${item.id}</span>
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="dp-body">
+    <input class="dp-title-input" id="dp-title" value="${item.title.replace(/"/g,'&quot;')}" placeholder="Item title"/>
+    <textarea class="dp-desc-input" id="dp-desc" placeholder="Add description...">${item.desc||''}</textarea>
+    <div class="dp-fields">
+      <div class="dp-field">
+        <div class="dp-field-label">Status</div>
+        <select class="dp-select" id="dp-status" onchange="previewChange('status',this.value)">
+          ${STATUS_ORDER.map(s=>`<option value="${s}"${item.status===s?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dp-field">
+        <div class="dp-field-label">Priority</div>
+        <select class="dp-select" id="dp-prio">
+          ${Object.entries(PRIO_LABELS).map(([k,v])=>`<option value="${k}"${item.prio===k?' selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dp-field">
+        <div class="dp-field-label">Type</div>
+        <select class="dp-select" id="dp-type">
+          ${Object.entries(TYPE_LABELS).map(([k,v])=>`<option value="${k}"${item.type===k?' selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dp-field">
+        <div class="dp-field-label">Assignee</div>
+        <select class="dp-select" id="dp-assignee">
+          <option value="">Unassigned</option>
+          ${MEMBERS.map(m=>`<option value="${m.id}"${item.assignee===m.id?' selected':''}>${m.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="dp-field">
+        <div class="dp-field-label">Start Date</div>
+        <input class="dp-date" type="date" id="dp-start" value="${item.start||''}"/>
+      </div>
+      <div class="dp-field">
+        <div class="dp-field-label">Due Date</div>
+        <input class="dp-date" type="date" id="dp-due" value="${item.due||''}"/>
+      </div>
+    </div>
+
+    <div class="dp-section-title">Comments</div>
+    <div class="comment-input-wrap">
+      <div class="avatar" style="width:28px;height:28px;background:#EEF2FF;color:#4F46E5;font-size:11px;flex-shrink:0">AK</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <textarea class="comment-input" id="dp-comment" placeholder="Add a comment..." rows="2"></textarea>
+        <div><button class="btn btn-primary" style="height:28px;font-size:12px" onclick="submitComment('${item.id}')">Post</button></div>
+      </div>
+    </div>
+    ${cmts.map(c=>`
+      <div class="comment-item">
+        <div class="avatar" style="width:28px;height:28px;background:${c.bg};color:${c.color};font-size:11px;flex-shrink:0">${c.initials}</div>
+        <div class="comment-body">
+          <span class="comment-author">${c.by}</span><span class="comment-time">${c.at}</span>
+          <div class="comment-text">${c.text}</div>
+        </div>
+      </div>`).join('')}
+
+    <div class="dp-section-title" style="margin-top:16px">Activity</div>
+    ${logs.length===0?`<div style="font-size:12px;color:var(--text-3);padding:8px 0">No changes recorded yet.</div>`:
+      logs.map(l=>`<div class="audit-item">
+        <div class="audit-dot"></div>
+        <div>
+          <div class="audit-text">
+            <strong>${l.by}</strong> changed <strong>${l.field}</strong>
+            <span class="audit-change"><span class="audit-old">${l.old}</span> → <span class="audit-new">${l.new}</span></span>
+          </div>
+          <div class="audit-time">${l.at}</div>
+        </div>
+      </div>`).join('')}
+  </div>
+  <div class="dp-save-bar">
+    <button class="btn btn-primary" onclick="saveDetail('${item.id}')">Save changes</button>
+    <button class="btn btn-ghost" onclick="closeDetail()">Cancel</button>
+    <button class="btn btn-danger" style="margin-left:auto" onclick="deleteItem('${item.id}')">Delete</button>
+  </div>`;
+}
+
+function addAudit(id,field,old_,new_){
+  if(!auditLogs[id]) auditLogs[id]=[];
+  const now=new Date();
+  const t=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  auditLogs[id].push({by:'Alex Kim',field,old:old_,new:new_,at:t});
+}
+
+function saveDetail(id){
+  const item=workItems.find(i=>i.id===id); if(!item) return;
+  const newTitle=document.getElementById('dp-title').value.trim()||item.title;
+  const newStatus=document.getElementById('dp-status').value;
+  const newPrio=document.getElementById('dp-prio').value;
+  const newType=document.getElementById('dp-type').value;
+  const newAssignee=document.getElementById('dp-assignee').value;
+  const newStart=document.getElementById('dp-start').value;
+  const newDue=document.getElementById('dp-due').value;
+  const newDesc=document.getElementById('dp-desc').value;
+
+  if(item.status!==newStatus) addAudit(id,'status',STATUS_LABELS[item.status],STATUS_LABELS[newStatus]);
+  if(item.prio!==newPrio) addAudit(id,'priority',PRIO_LABELS[item.prio],PRIO_LABELS[newPrio]);
+  if(item.assignee!==(newAssignee?+newAssignee:null)) addAudit(id,'assignee',member(item.assignee)?.name||'None',member(+newAssignee)?.name||'None');
+  if(item.due!==newDue) addAudit(id,'due date',item.due||'none',newDue||'none');
+
+  item.title=newTitle; item.status=newStatus; item.prio=newPrio; item.type=newType;
+  item.assignee=newAssignee?+newAssignee:null; item.start=newStart; item.due=newDue; item.desc=newDesc;
+
+  showToast('✓ Changes saved');
+  closeDetail();
+  renderCurrentView(); updateBadge();
+}
+
+function submitComment(id){
+  const input=document.getElementById('dp-comment');
+  const text=input.value.trim(); if(!text) return;
+  if(!comments[id]) comments[id]=[];
+  const now=new Date();
+  comments[id].push({by:'Alex Kim',initials:'AK',bg:'#EEF2FF',color:'#4F46E5',text,at:now.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})});
+  addAudit(id,'comment','—',`"${text.slice(0,30)}${text.length>30?'...':''}"`);
+  const item=workItems.find(i=>i.id===id);
+  renderDetailPanel(item);
+}
+
+function previewChange(field,val){}
+
+function closeDetail(){
+  document.getElementById('detail-overlay').style.display='none';
+  selectedItemId=null;
+}
+
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('detail-overlay')) closeDetail();
+}
+
+function deleteItem(id){
+  workItems=workItems.filter(i=>i.id!==id);
+  closeDetail(); renderCurrentView(); updateBadge();
+  showToast('🗑 Item deleted');
+}
+
+// ─── ADD MODAL ───────────────────────────────────────────────────────────────
+function openAddModal(){
+  const mAssignee=document.getElementById('m-assignee');
+  mAssignee.innerHTML=`<option value="">Unassigned</option>${MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}`;
+  const mProj=document.getElementById('m-proj');
+  mProj.innerHTML=projects.map(p=>`<option value="${p.id}"${p.id===activeProj?' selected':''}>${p.name}</option>`).join('');
+  document.getElementById('modal-overlay').style.display='flex';
+  setTimeout(()=>document.getElementById('m-title').focus(),50);
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').style.display='none';
+  document.getElementById('m-title').value='';
+}
+
+async function submitNewItem(){
+
+  const title = document.getElementById('m-title').value.trim();
+  if(!title){
+    document.getElementById('m-title').focus();
+    return;
+  }
+
+  const item = {
+    id: genId(),
+    projId: document.getElementById('m-proj').value,
+    type: document.getElementById('m-type').value,
+    title: title,
+    status: document.getElementById('m-status').value,
+    prio: document.getElementById('m-prio').value,
+    assignee: document.getElementById('m-assignee').value || null,
+    start: today(),
+    due: document.getElementById('m-due').value || null,
+    desc: ''
+  };
+
+  await saveWorkItemToDB(item);
+  await loadWorkItemsFromDB();
+
+  closeModal();
+  renderCurrentView();
+  updateBadge();
+
+  showToast(`✓ ${item.id} created`);
+}
+
+function openNewProjectModal(){
+  const overlay=document.createElement('div'); overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal">
+    <h3>New Project</h3>
+    <div class="field-group"><label>Project Name</label><input type="text" id="np-name" placeholder="e.g. Platform v3"/></div>
+    <div class="field-group"><label>Color</label>
+      <select id="np-color">
+        <option value="#4F46E5">Indigo</option><option value="#22C55E">Green</option>
+        <option value="#F59E0B">Amber</option><option value="#EF4444">Red</option>
+        <option value="#8B5CF6">Purple</option><option value="#06B6D4">Cyan</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="createProject(this)">Create</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('np-name').focus(),50);
+}
+
+async function createProject(btn){
+
+  const name = document.getElementById('np-name').value.trim();
+  if(!name) return;
+
+  const color = document.getElementById('np-color').value;
+
+  const { data, error } = await supabaseClient
+    .from("projects")
+    .insert({
+      name: name,
+      color: color
+    })
+    .select()
+    .single();
+
+  if(error){
+    console.error("Project create error:", error);
+    return;
+  }
+
+  projects.push({
+    id: data.id,
+    name: data.name,
+    color: data.color
+  });
+
+  activeProj = data.id;
+
+  btn.closest('.modal-overlay').remove();
+
+  renderSidebarProjects();
+  setView('backlog');
+}
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+function handleSearch(q){
+  const box=document.getElementById('search-results');
+  if(!q.trim()){ box.style.display='none'; return; }
+  const results=workItems.filter(i=>
+    i.id.toLowerCase().includes(q.toLowerCase())||
+    i.title.toLowerCase().includes(q.toLowerCase())||
+    (STATUS_LABELS[i.status]||'').toLowerCase().includes(q.toLowerCase())
+  ).slice(0,6);
+  if(!results.length){ box.style.display='none'; return; }
+  box.innerHTML=results.map(item=>`
+    <div class="search-result-item" onclick="openDetail('${item.id}');document.getElementById('global-search').value='';hideSearch()">
+      <span class="wi-id">${item.id}</span>
+      <span class="pill pill-type-${item.type}" style="font-size:10px">${TYPE_LABELS[item.type]}</span>
+      <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.title}</span>
+      <span class="pill pill-status-${item.status}" style="font-size:10px">${STATUS_LABELS[item.status]}</span>
+    </div>`).join('');
+  box.style.display='block';
+}
+
+function hideSearch(){ document.getElementById('search-results').style.display='none'; }
+
+// ─── SUB TAB ─────────────────────────────────────────────────────────────────
+function switchSubTab(tab,el){
+  activeSubTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(currentView==='backlog'){ if(tab==='list') renderBacklogView(); else renderKanbanView(); }
+}
+
+function renderCurrentView(){
+  if(currentView==='dashboard') renderDashboard();
+  else if(currentView==='backlog') renderBacklogView();
+  else if(currentView==='kanban') renderKanbanView();
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2400);
+}
+
+// ─── KEYBOARD ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeDetail(); closeModal(); }
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){ e.preventDefault(); document.getElementById('global-search').focus(); }
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+<script src="modules/projects.js"></script>
+<script src="modules/workitems.js"></script>
+<script src="modules/subtasks.js"></script>
+<script src="modules/comments.js"></script>
+<script src="modules/attachments.js"></script>
+<script src="modules/team.js"></script>
+<script src="modules/sprint.js"></script>
+<script>
+  async function initApp(){
+
+  await loadProjectsFromDB();     // load projects first
+  await loadWorkItemsFromDB();    // then load tasks
+
+  renderSidebarProjects();
+  setView('dashboard');
+
+}
+
+
+window.addEventListener("DOMContentLoaded", initApp);
+</script>
+</body>
+</html>

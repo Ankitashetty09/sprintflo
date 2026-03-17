@@ -1,0 +1,1 @@
+console.log('comments.js module loaded');

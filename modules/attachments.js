@@ -1,0 +1,1 @@
+console.log('attachments.js module loaded');
