@@ -399,7 +399,9 @@ let selectedItemId = null;
 let activeSubTab = 'list';
 let modal = null;
 
-function genId(){ return 'WI' + String(nextId++).padStart(4,'0'); }
+function genId(){ 
+  return 'WI' + Date.now(); 
+}
 function today(){ return new Date().toISOString().slice(0,10); }
 function isOverdue(d,s){ return d && d < today() && s !== 'done'; }
 function fmtDate(d){ if(!d) return '—'; const [y,m,dy]=d.split('-'); const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]; return `${mo} ${+dy}`; }
