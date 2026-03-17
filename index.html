@@ -872,7 +872,8 @@ function closeModal(){
 }
 
 async function submitNewItem(){
-
+  console.log("SUBMIT CALLED");
+  
   const title = document.getElementById('m-title').value.trim();
   if(!title){
     document.getElementById('m-title').focus();
