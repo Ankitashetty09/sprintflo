@@ -3,9 +3,18 @@ console.log("workitems.js module loaded");
 // LOAD tasks from Supabase
 async function loadWorkItemsFromDB(){
 
+  // 🔥 GET LOGGED-IN USER
+  const { data: userData } = await supabaseClient.auth.getUser();
+
+  if(!userData || !userData.user){
+    console.error("No user logged in");
+    return;
+  }
+
   const { data, error } = await supabaseClient
     .from("work_items")
-    .select("*");
+    .select("*")
+    .eq("user_id", userData.user.id);   // ✅ FILTER BY USER
 
   if(error){
     console.error("Error loading items:", error);
@@ -39,6 +48,11 @@ async function saveWorkItemToDB(item){
   // 🔥 GET LOGGED-IN USER
   const { data: userData } = await supabaseClient.auth.getUser();
 
+  if(!userData || !userData.user){
+    console.error("No user logged in");
+    return;
+  }
+
   const { error } = await supabaseClient
     .from("work_items")
     .insert({
@@ -52,7 +66,7 @@ async function saveWorkItemToDB(item){
       assignee_id: item.assignee,
       start_date: item.start,
       due_date: item.due,
-      user_id: userData.user.id   // ✅ ADD THIS LINE
+      user_id: userData.user.id   // ✅ MUST HAVE
     });
 
   if(error){
@@ -65,10 +79,19 @@ async function saveWorkItemToDB(item){
 // UPDATE status when card moved
 async function updateStatusInDB(id,newStatus){
 
+  // 🔥 GET LOGGED-IN USER
+  const { data: userData } = await supabaseClient.auth.getUser();
+
+  if(!userData || !userData.user){
+    console.error("No user logged in");
+    return;
+  }
+
   const { error } = await supabaseClient
     .from("work_items")
     .update({ status:newStatus })
-    .eq("id",id);
+    .eq("id", id)
+    .eq("user_id", userData.user.id);   // ✅ EXTRA SAFETY
 
   if(error){
     console.error("Status update error:", error);
