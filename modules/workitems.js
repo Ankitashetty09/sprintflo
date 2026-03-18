@@ -36,6 +36,9 @@ async function loadWorkItemsFromDB(){
 // SAVE new task
 async function saveWorkItemToDB(item){
 
+  // 🔥 GET LOGGED-IN USER
+  const { data: userData } = await supabaseClient.auth.getUser();
+
   const { error } = await supabaseClient
     .from("work_items")
     .insert({
@@ -48,7 +51,8 @@ async function saveWorkItemToDB(item){
       priority: item.prio,
       assignee_id: item.assignee,
       start_date: item.start,
-      due_date: item.due
+      due_date: item.due,
+      user_id: userData.user.id   // ✅ ADD THIS LINE
     });
 
   if(error){
