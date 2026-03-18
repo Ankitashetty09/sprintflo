@@ -1078,18 +1078,21 @@ async function login(){
 }
 
 async function signup(){
+
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  const { error } = await supabaseClient.auth.signUp({
+  const { data, error } = await supabaseClient.auth.signUp({
     email,
     password
   });
 
+  console.log("SIGNUP RESPONSE:", data, error);  // 👈 ADD THIS
+
   if(error){
-    alert(error.message);
+    alert(error.message);   // 👈 WILL SHOW REAL ERROR
   } else {
-    alert("Signup successful. Now login.");
+    alert("Signup successful");
   }
 }
 
