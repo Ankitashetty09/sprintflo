@@ -3,18 +3,17 @@ console.log("workitems.js module loaded");
 // LOAD tasks from Supabase
 async function loadWorkItemsFromDB(){
 
-  // 🔥 GET LOGGED-IN USER
-  const { data: userData } = await supabaseClient.auth.getUser();
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
-  if(!userData || !userData.user){
-    console.error("No user logged in");
+  if(!session){
+    console.error("No session found");
     return;
   }
 
   const { data, error } = await supabaseClient
     .from("work_items")
     .select("*")
-    .eq("user_id", userData.user.id);   // ✅ FILTER BY USER
+    .eq("user_id", session.user.id);   // ✅ FIXED
 
   if(error){
     console.error("Error loading items:", error);
@@ -38,18 +37,16 @@ async function loadWorkItemsFromDB(){
     renderCurrentView();
     updateBadge();
   }
-
 }
 
 
 // SAVE new task
 async function saveWorkItemToDB(item){
 
-  // 🔥 GET LOGGED-IN USER
-  const { data: userData } = await supabaseClient.auth.getUser();
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
-  if(!userData || !userData.user){
-    console.error("No user logged in");
+  if(!session){
+    console.error("No session");
     return;
   }
 
@@ -66,24 +63,22 @@ async function saveWorkItemToDB(item){
       assignee_id: item.assignee,
       start_date: item.start,
       due_date: item.due,
-      user_id: userData.user.id   // ✅ MUST HAVE
+      user_id: session.user.id   // ✅ FIXED
     });
 
   if(error){
     console.error("Insert error:", error);
   }
-
 }
 
 
 // UPDATE status when card moved
 async function updateStatusInDB(id,newStatus){
 
-  // 🔥 GET LOGGED-IN USER
-  const { data: userData } = await supabaseClient.auth.getUser();
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
-  if(!userData || !userData.user){
-    console.error("No user logged in");
+  if(!session){
+    console.error("No session");
     return;
   }
 
@@ -91,7 +86,7 @@ async function updateStatusInDB(id,newStatus){
     .from("work_items")
     .update({ status:newStatus })
     .eq("id", id)
-    .eq("user_id", userData.user.id);   // ✅ EXTRA SAFETY
+    .eq("user_id", session.user.id);   // ✅ FIXED
 
   if(error){
     console.error("Status update error:", error);

@@ -233,7 +233,18 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+
+<div id="auth-container" style="max-width:400px;margin:100px auto;text-align:center;">
+  <h2>SprintFlo Login</h2>
+
+  <input id="email" placeholder="Email" class="form-control mb-2">
+  <input id="password" type="password" placeholder="Password" class="form-control mb-2">
+
+  <button onclick="login()" class="btn btn-primary w-100 mb-2">Login</button>
+  <button onclick="signup()" class="btn btn-secondary w-100">Sign Up</button>
+</div>
+
+<div class="app" id="app" style="display:none;">
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-logo">
@@ -1035,7 +1046,53 @@ document.addEventListener('keydown',e=>{
 }
 
 
-window.addEventListener("DOMContentLoaded", initApp);
+window.addEventListener("DOMContentLoaded", async () => {
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if(session){
+    document.getElementById("auth-container").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    initApp();
+  } else {
+    document.getElementById("auth-container").style.display = "block";
+    document.getElementById("app").style.display = "none";
+  }
+
+});
+
+async function login(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    alert(error.message);
+  } else {
+    location.reload();
+  }
+}
+
+async function signup(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+
+  if(error){
+    alert(error.message);
+  } else {
+    alert("Signup successful. Now login.");
+  }
+}
+
 </script>
 </body>
 </html>
